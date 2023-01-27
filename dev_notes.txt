@@ -1,0 +1,6 @@
+Data Cleaning:
+    dates: check date formats are legit
+    country code: should probably be 2 capital letters
+    telephone number: inconsistency with telephone number prefixes (+44 or 0 for UK), multiple countries' numbers listed
+    dtypes for everything except index are "object" - change this to be more appropriate depending on column?
+    lots of 

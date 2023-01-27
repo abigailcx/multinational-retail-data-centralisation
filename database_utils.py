@@ -66,10 +66,11 @@ class DatabaseConnector:
     def upload_to_db(self):
         """
         This method takes in a Pandas DataFrame and table name to upload to as an argument.
-        once 
+        
+        Use this method to store the data in your Sales_Data database in a table named dim_users
         """
         pass
 
-
-dbcon = DatabaseConnector('db_creds.yaml')
-dbcon.run()
+if __name__ == "__main__":
+    dbcon = DatabaseConnector('db_creds.yaml')
+    dbcon.run()
