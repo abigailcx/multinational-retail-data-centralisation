@@ -1,5 +1,7 @@
 from database_utils import DatabaseConnector
 import pandas as pd
+pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
 
 class DataExtractor(DatabaseConnector):
     """
@@ -32,11 +34,12 @@ class DataExtractor(DatabaseConnector):
         print(table_name)
         print(engine.connect())
         users = pd.read_sql_table(table_name, engine)
-        print(users.head(10))
+        print(users.head(50))
+        users.info()
+        print(users.dtypes)
+        
+        return users
 
-        # tables_list = self.run()
-        # print(tables_list)
-        # return tables_list
-
-datex = DataExtractor()
-datex.read_rds_table()
+if __name__ == "__main__":
+    datex = DataExtractor()
+    datex.read_rds_table()
