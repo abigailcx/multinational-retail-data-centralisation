@@ -31,12 +31,12 @@ class DataExtractor(DatabaseConnector):
         db_connector.read_db_creds()
         engine = db_connector.init_db_engine()
         table_name = db_connector.list_db_tables()[1]
-        print(table_name)
-        print(engine.connect())
+        # print(table_name)
+        # print(engine.connect())
         users = pd.read_sql_table(table_name, engine)
-        print(users.head(50))
-        users.info()
-        print(users.dtypes)
+        # print(users.head(50))
+        # users.info()
+        # print(users.dtypes)
         
         return users
 

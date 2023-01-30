@@ -1,6 +1,36 @@
 Data Cleaning:
     dates: check date formats are legit
     country code: should probably be 2 capital letters
+    lots of nonsense looking country codes:
+    {'QREF9WLI2A', 'PG8MOC0UZI', 'US', 'GB', 'FB13AKRI21', 'XPVCZE2L8B', 'QVUW9JSKY3', '44YAIDY048', 'OS2P9CMHR6', 
+    'IM8MN1L9MJ', '0CU6LW3NKB', '5D74J6FPFJ', 'XKI9UXSCZ1', 'NTCGYW8LVC', 'GGB', 'RVRFD92E48', 'LZGTB0T5Z7', 
+    'VSM4IZ4EL3', 'DE'}
     telephone number: inconsistency with telephone number prefixes (+44 or 0 for UK), multiple countries' numbers listed
     dtypes for everything except index are "object" - change this to be more appropriate depending on column?
-    lots of 
+    - need to define the parameters of the extent of cleaning/normalisation
+    
+    
+
+
+RangeIndex: 15320 entries, 0 to 15319
+Data columns (total 12 columns):
+ #   Column         Non-Null Count  Dtype 
+---  ------         --------------  ----- 
+ 0   index          15320 non-null  int64 
+ 1   first_name     15320 non-null  object
+ 2   last_name      15320 non-null  object
+ 3   date_of_birth  15320 non-null  object
+ 4   company        15320 non-null  object
+ 5   email_address  15320 non-null  object
+ 6   address        15320 non-null  object
+ 7   country        15320 non-null  object
+ 8   country_code   15320 non-null  object
+ 9   phone_number   15320 non-null  object
+ 10  join_date      15320 non-null  object
+ 11  user_uuid      15320 non-null  object
+dtypes: int64(1), object(11)
+memory usage: 1.4+ MB
+Index(['index', 'first_name', 'last_name', 'date_of_birth', 'company',
+       'email_address', 'address', 'country', 'country_code', 'phone_number',
+       'join_date', 'user_uuid'],
+      dtype='object')
