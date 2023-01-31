@@ -3,7 +3,7 @@ import psycopg2
 import yaml
 from sqlalchemy import create_engine
 from sqlalchemy import inspect
-
+from data_cleaning import DataCleaner
 
 class DatabaseConnector:
     """
@@ -13,9 +13,6 @@ class DatabaseConnector:
     def __init__(self, creds_filename) -> None:
         self.creds_filename = creds_filename
         self.creds_dict = {}
-
-    def extract_data_from_AWS_database(self):
-        pass
 
     def read_db_creds(self):
         """
@@ -62,15 +59,20 @@ class DatabaseConnector:
         self.read_db_creds()
         self.init_db_engine()
         self.list_db_tables()
+        # self.upload_to_db()
 
-    def upload_to_db(self):
+    def upload_to_db(self, table_name, dataframe):
         """
         This method takes in a Pandas DataFrame and table name to upload to as an argument.
         
         Use this method to store the data in your Sales_Data database in a table named dim_users
         """
-        pass
+        dataframe.to_sql(table_name, self.init_db_engine())
+
 
 if __name__ == "__main__":
     dbcon = DatabaseConnector('db_creds.yaml')
     dbcon.run()
+    dc = DataCleaner()
+
+    dbcon.upload_to_db('dim_users', dc.users_rds_table, )
