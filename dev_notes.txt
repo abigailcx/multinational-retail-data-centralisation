@@ -8,7 +8,7 @@ Data Cleaning:
     telephone number: inconsistency with telephone number prefixes (+44 or 0 for UK), multiple countries' numbers listed
     dtypes for everything except index are "object" - change this to be more appropriate depending on column?
     - need to define the parameters of the extent of cleaning/normalisation
-    
+
     
 
 
@@ -34,3 +34,59 @@ Index(['index', 'first_name', 'last_name', 'date_of_birth', 'company',
        'email_address', 'address', 'country', 'country_code', 'phone_number',
        'join_date', 'user_uuid'],
       dtype='object')
+
+
+time data '1968 October 16' does not match format '%Y-%m-%d'
+{'1968 October 16'}
+time data '1971/10/23' does not match format '%Y-%m-%d'
+{'1971/10/23'}
+time data 'January 1951 27' does not match format '%Y-%m-%d'
+{'January 1951 27'}
+time data 'November 1958 11' does not match format '%Y-%m-%d'
+{'November 1958 11'}
+time data '1946 October 18' does not match format '%Y-%m-%d'
+{'1946 October 18'}
+time data '1974/06/06' does not match format '%Y-%m-%d'
+{'1974/06/06'}
+time data '2000/01/06' does not match format '%Y-%m-%d'
+{'2000/01/06'}
+time data '1979 February 01' does not match format '%Y-%m-%d'
+{'1979 February 01'}
+time data '2003/09/21' does not match format '%Y-%m-%d'
+{'2003/09/21'}
+time data 'June 1943 28' does not match format '%Y-%m-%d'
+{'June 1943 28'}
+time data 'November 1963 06' does not match format '%Y-%m-%d'
+{'November 1963 06'}
+time data '1998/08/14' does not match format '%Y-%m-%d'
+{'1998/08/14'}
+time data 'February 2005 05' does not match format '%Y-%m-%d'
+{'February 2005 05'}
+time data 'July 1966 08' does not match format '%Y-%m-%d'
+{'July 1966 08'}
+time data '2001/07/28' does not match format '%Y-%m-%d'
+{'2001/07/28'}
+time data '1948 October 24' does not match format '%Y-%m-%d'
+{'1948 October 24'}
+time data 'December 1946 09' does not match format '%Y-%m-%d'
+{'December 1946 09'}
+time data '1942/05/29' does not match format '%Y-%m-%d'
+{'1942/05/29'}
+time data '2001/10/23' does not match format '%Y-%m-%d'
+{'2001/10/23'}
+time data '1944/11/30' does not match format '%Y-%m-%d'
+{'1944/11/30'}
+time data '2005 January 27' does not match format '%Y-%m-%d'
+{'2005 January 27'}
+time data 'July 1961 14' does not match format '%Y-%m-%d'
+{'July 1961 14'}
+time data 'July 1939 16' does not match format '%Y-%m-%d'
+{''}
+time data '1951 January 14' does not match format '%Y-%m-%d'
+{'1951 January 14'}
+time data '1944/10/15' does not match format '%Y-%m-%d'
+{'1944/10/15'}
+time data '1981/01/09' does not match format '%Y-%m-%d'
+{'1981/01/09'}
+time data 'May 1996 25' does not match format '%Y-%m-%d'
+{'May 1996 25'}

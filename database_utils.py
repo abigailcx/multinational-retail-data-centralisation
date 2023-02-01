@@ -3,7 +3,6 @@ import psycopg2
 import yaml
 from sqlalchemy import create_engine
 from sqlalchemy import inspect
-from data_cleaning import DataCleaner
 
 class DatabaseConnector:
     """
@@ -39,7 +38,7 @@ class DatabaseConnector:
         url = f"{database_type}+{database_api}://{self.creds_dict['RDS_USER']}:{self.creds_dict['RDS_PASSWORD']}@{self.creds_dict['RDS_HOST']}:{self.creds_dict['RDS_PORT']}/{self.creds_dict['RDS_DATABASE']}"
         # print(url)
         engine = create_engine(url)
-        # engine.connect()
+        engine.connect()
 
         return engine
 
@@ -50,12 +49,13 @@ class DatabaseConnector:
         """
         engine = self.init_db_engine()
         inspector = inspect(engine)
-        # print(inspector.get_table_names())
+        print(inspector.get_table_names()) # ['legacy_store_details', 'legacy_users', 'orders_table']
+    
         return inspector.get_table_names()
 
         # engine.execute()
 
-    def run(self):
+    def connect_to_db(self):
         self.read_db_creds()
         self.init_db_engine()
         self.list_db_tables()
@@ -72,7 +72,12 @@ class DatabaseConnector:
 
 if __name__ == "__main__":
     dbcon = DatabaseConnector('db_creds.yaml')
-    dbcon.run()
-    dc = DataCleaner()
+    dbcon.connect_to_db()
 
-    dbcon.upload_to_db('dim_users', dc.users_rds_table, )
+    #local_dbcon = DatabaseConnector('local_creds.yaml')
+    # local_dbcon.run()
+    #print(local_dbcon.list_db_tables())
+    #test_table = DataExtractor.read_rds_table(local_dbcon.init_db_engine(), 'legacy_users' ) # local_dbcon.list_db_tables()[1]
+    # dc = DataCleaner()
+
+    #local_dbcon.upload_to_db('dim_users', test_table)
