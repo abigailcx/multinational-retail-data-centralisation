@@ -1,5 +1,6 @@
 # from database_utils import DatabaseConnector
 import pandas as pd
+import tabula
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
 
@@ -25,21 +26,27 @@ class DataExtractor:
         Use the read_rds_table method to extract the table containing user data and 
         return a pandas DataFrame.
         """
-        
-        # engine = DatabaseConnector(creds_filename="db_creds.yaml").init_db_engine()
-        # db_connector = DatabaseConnector(creds_filename="db_creds.yaml")
-        # db_connector.read_db_creds()
-        # engine = db_connector.init_db_engine()
-        # table_name = engine.list_db_tables()[1]
-        # print(table_name)
-        # print(engine.connect())
         users_df = pd.read_sql_table(table_name, engine)
-        # print(users_df.head(50))
-        # users_df.info()
-        # print(users_df.dtypes)
         
         return users_df
 
+
+    @staticmethod
+    def retrieve_pdf_data(url):
+        """
+        which takes in a link as an argument and returns a pandas DataFrame.
+
+        Use the tabular-py Python package, imported with tabula to extract all pages from the pdf document at following link .
+        Then return a DataFrame of the extracted data.
+
+        https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf
+        """
+        card_df = pd.concat(tabula.read_pdf(url, pages='all'))
+        print(card_df.head(10))
+        # print(card_df)
+        return card_df
+
 if __name__ == "__main__":
     datex = DataExtractor()
-    datex.read_rds_table()
+    # datex.read_rds_table()
+    datex.retrieve_pdf_data('https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf')

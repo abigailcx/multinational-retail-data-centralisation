@@ -14,7 +14,7 @@ def main():
     user_table = datex.read_rds_table(dbcon.init_db_engine(), dbcon.list_db_tables()[1])
 
     # clean data
-    cleaner = DataCleaner(user_table)
+    cleaner = DataCleaner(user_table=user_table)
     cleaned_df = cleaner.clean_user_data()
     
     # connect to local pgadmin db to upload cleaned pandas df to db as SQL table
@@ -26,5 +26,16 @@ def main():
 
     print("END OF MAIN.")
 
+def main_2():
+    card_datex = DataExtractor
+    card_table = card_datex.retrieve_pdf_data('https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf')
+
+    card_cleaner = DataCleaner(card_table=card_table)
+    card_cleaner.clean_card_data() #cleaned_card_df = 
+
+
+
+
 if __name__ == "__main__":
-    main()
+    # main()
+    main_2()
