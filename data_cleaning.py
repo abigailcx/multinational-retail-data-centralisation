@@ -9,208 +9,169 @@ class DataCleaner:
     """
     Includes methods to clean data from each of the data sources
     """
-    def __init__(self, user_table=None, card_table=None) -> None:
+    def __init__(self, user_table=None, card_table=None, store_table=None, products_table=None) -> None:
         self.users_rds_table = user_table
         self.card_info_table = card_table
-        # self.data_extractor = DataExtractor()
-        # self.users_rds_table = self.data_extractor.read_rds_table()
+        self.store_info_table = store_table
+        self.products_info_table = products_table
+
 
     @staticmethod
     def remove_null_values(dataframe):
-        # col_names = list(self.users_rds_table.columns)
-        # print(col_names)
-        # for col_name in col_names:
-            # print(type(self.users_rds_table[col_name]))
-            # self.users_rds_table = self.users_rds_table[self.users_rds_table[f"{col_name}"].str.contains("NULL") == True]
-        
-        #  df = df[~df.isin(['test', 'tes']).any(axis=1)]
-               # df = df[~df['your column'].isin(['list of strings'])]
         print("Removing null values...")
-        dataframe = dataframe[~dataframe.isin(['NULL']).any(axis=1)]
-        
-        return dataframe
+
+        dataframe.replace('NULL', None, inplace=True)
+        dataframe.dropna(inplace=True)
 
 
     @staticmethod
-    def normalise_phone_numbers(phone_number):
-        """
-        +49 Germany
-        +44 UK
-        sub (0) with nothing
-        sub + at beginning of line for 00
-        remove whitespace
-        remove hyphens
-        remove periods
-        remove brackets
-        """
-        remove_bracketed_zero = re.sub(r'\(0\)', '', phone_number)
-        insert_exit_code = re.sub(r'^\+', '00', remove_bracketed_zero)
-        remove_whitespace = re.sub(r'[\)\(\.\- ]', '', insert_exit_code)
+    def normalise_phone_numbers(dataframe, columns_to_normalise):
+        print("Normalising phone numbers...")
+        replacements_dictionary = {'\(0\)': '', '[\)\(\.\- ]' : '', '^\+': '00'}
+        # this nested for loop is only a short iteration
+        for col_name in columns_to_normalise:
+            for existing, replacement in replacements_dictionary.items():
+                dataframe[col_name] = dataframe[col_name].str.replace(existing, replacement, regex=True)
+                # print(dataframe[col_name])
 
-        # print(remove_whitespace)
-        return remove_whitespace
-
-    
-    def get_normalised_phone_numbers(self):
-
-        for idx, row in tqdm(self.users_rds_table.iterrows(), total=len(self.users_rds_table), desc="Normalising phone numbers..."):
-            row['phone_number'] = self.normalise_phone_numbers(row['phone_number'])
-            self.users_rds_table.loc[idx, ['phone_number']] = row['phone_number']
-        
-        # print(self.users_rds_table['phone_number'])
 
     @staticmethod
     def normalise_dates(dataframe, columns_to_normalise):
         """
-        date_of_birth
-        join_date
-
         issues with date of birth are:
-        cell is empty - do a str.replace() with NaN
-        / are used instead of - , e.g. 1944/11/30 - str.replace()
+        cell is empty
+        / are used instead of - , e.g. 1944/11/30
         dates written with month as word (varying y-m-d order), e.g. 2005 January 27, July 1961 14
-        
-        first translate month words to numbers using dictionary
-        then 
         """
-        # print(self.users_rds_table['date_of_birth'].head(50))
-        # date_columns = ['date_of_birth', 'join_date']
-        # replace_dict = {}
-        # for col_name in date_columns:
-        #     self.users_rds_table = self.users_rds_table[col_name].replace(r'^\s*$', np.nan, regex=True)
-            # self.users_rds_table = self.users_rds_table[col].replace('/', '-', regex=False)
-            # self.users_rds_table = self.users_rds_table[col].replace(r'@{2}', '@', regex=True)
-        # dictionary = {'' } 
-        # for key in dictionary.keys():
-        # address = address.upper().replace(key, dictionary[key])
-        
-        # for 
-
+        # iterates over list of columns (max is currently 2), so not too much iteration
+        print("Normalising dates...")
         for col_name in columns_to_normalise:
-            for idx, row in tqdm(dataframe.iterrows(), total=len(dataframe), desc="Normalising dates..."):
-                try:
-                    # try to create a datetime object
-                    datetime.datetime.strptime(row[col_name], '%Y-%m-%d')
-                    
-                except ValueError as e:
-                    # dataframe.loc[idx, col_name] = row[col_name].replace(' ', 'NULL')
-                    print(e)
-                    pass
-                
-                try:
-                    # try to parse odd format dates and standardise them
-                    parsed_date = parser.parse(row[col_name], dayfirst=True)
-                    dataframe.loc[idx, col_name] = parsed_date.strftime('%Y-%m-%d')
-                
-                except parser._parser.ParserError as e:
-                    print(e)
-                    dataframe = dataframe.drop(idx)
-                    
+            # normalise dates to same format YYYY-MM-DD and NaN for any that can't be converted
+            dataframe[col_name] = pd.to_datetime(dataframe[col_name], format='%Y-%m-%d', errors='coerce')
+            # drop rows that include NaNs, editing the original dataframe (returns None)
+            dataframe.dropna(inplace=True)
+ 
 
-                    # print(e)
-                    
-        # def verify_dates(self):
-        # """
-        # date_of_birth
-        # join_date
+    @staticmethod
+    def normalise_month_year_dates(dataframe, columns_to_normalise):
+        """
 
-        # issues with date of birth are:
-        # cell is empty - do a str.replace() with NaN
-        # / are used instead of - , e.g. 1944/11/30 - str.replace()
-        # dates written with month as word (varying y-m-d order), e.g. 2005 January 27, July 1961 14
-        
-        # first translate month words to numbers using dictionary
-        # then 
-        # """
-        # # print(self.users_rds_table['date_of_birth'].head(50))
-        # date_columns = ['date_of_birth', 'join_date']
-        # # replace_dict = {}
-        # # for col_name in date_columns:
-        # #     self.users_rds_table = self.users_rds_table[col_name].replace(r'^\s*$', np.nan, regex=True)
-        #     # self.users_rds_table = self.users_rds_table[col].replace('/', '-', regex=False)
-        #     # self.users_rds_table = self.users_rds_table[col].replace(r'@{2}', '@', regex=True)
-        # # dictionary = {'' } 
-        # # for key in dictionary.keys():
-        # # address = address.upper().replace(key, dictionary[key])
-        
-        # # for 
-
-        # for col_name in date_columns:
-        #     for idx, row in tqdm(self.users_rds_table.iterrows(), total=len(self.users_rds_table), desc="Normalising dates..."):
-        #         try:
-        #             datetime.datetime.strptime(row[col_name], '%Y-%m-%d')
-                    
-        #         except ValueError as e:
-        #             self.users_rds_table.loc[idx, [col_name]] = row[col_name].replace(' ', 'NULL')
-        #             parsed_date = parser.parse(row[col_name], dayfirst=True)
-        #             self.users_rds_table.loc[idx, [col_name]] = parsed_date.strftime('%Y-%m-%d')
-        #             # print(e)
+        """
+        # iterates over list of columns (max is currently 2), so not too much iteration
+        print("Normalising card expiry dates...")
+        for col_name in columns_to_normalise:
+            # filter out any rows that do not fit the regex pattern
+            dataframe = dataframe[dataframe[col_name].str.contains(r'\d{2}\/\d{2}', regex=True)]
+            # boolean masking to get boolean array of which dates are valid
+            mask_index = pd.to_datetime(dataframe[col_name], format='%m/%y', errors='coerce').notna().index
+            dataframe = dataframe.iloc[mask_index]
 
 
     @staticmethod
-    def normalise_month_day_dates(dataframe, columns_to_normalise):
-        """
- 
-        """
-        for col_name in columns_to_normalise:
-            for idx, row in tqdm(dataframe.iterrows(), total=len(dataframe), desc="Normalising credit card expiry dates..."):
-                # try:
-                #     # try to create a datetime object from string (doesn't work out whether date is real)
-                #     datetime.datetime.strptime(row[col_name], '%m/%d')
-                    
-                # except ValueError as e:
-                #     # dataframe.loc[idx, col_name] = row[col_name].replace(' ', 'NULL')
-                #     # print(e)
-                #     pass
-                
-                try:
-                    # try to parse odd format dates and standardise them
-                    parsed_date = parser.parse(row[col_name], dayfirst=False)
-                    dataframe.loc[idx, col_name] = parsed_date.strftime('%m/%d')
-                
-                except ValueError as e:
-                    print(e)
-                    dataframe = dataframe.drop(idx)
-
-                except parser._parser.ParserError as e:
-                    print(e)
-                    dataframe = dataframe.drop(idx)
-
-
-    def normalise_email_addresses(self):
+    def normalise_email_addresses(dataframe, columns_to_normalise):
         """
         All invalid email addresses include 2 sequential @ symbols
+        check if re.fullmatch is true
+        if not, str.replace @{2} with single @ 
+        then test again. if still not fullmatch then drop 
         """
-        email_regex = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b')
-
-        for idx, row in tqdm(self.users_rds_table.iterrows(), total=len(self.users_rds_table), desc="Normalising email adressess..."):
-            if not re.fullmatch(email_regex, row['email_address']):
-                row['email_address'] = re.sub(r'@{2}', '@', row['email_address'])
-                self.users_rds_table.loc[idx, ['email_address']] = row['email_address']
-                # print(self.users_rds_table.loc[idx, ['email_address']])
-                if not re.fullmatch(email_regex, row['email_address']):
-                    # print(self.users_rds_table.loc[idx, ['email_address']])
-                    self.users_rds_table = self.users_rds_table.drop(idx)
-                    
-            else:
-                pass
+        print("Normalising email addresses...")
+        for col_name in columns_to_normalise:
+            # replace '@@' with '@' as it was an obvious issue during EDA
+            dataframe[col_name] = dataframe[col_name].str.replace('@{2}', '@', regex=True)
+            # create a boolean series which evaluates whether each email adheres to email address format
+            mask = dataframe[col_name].str.fullmatch(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b')
+            # keep rows where email evaluated to True
+            dataframe = dataframe.loc[mask]
 
 
-    def normalise_country_code(self):
+    @staticmethod
+    def normalise_country_code(dataframe, column_to_normalise):
         """
         Infers code "GGB" is actually intended to be "GB" (cross-referenced with country column)
         """
         print("Normalising country codes...")
-        corrupted_codes = ['QREF9WLI2A', 'PG8MOC0UZI', 'FB13AKRI21', 'XPVCZE2L8B', 'QVUW9JSKY3', '44YAIDY048', 'OS2P9CMHR6', 
-        'IM8MN1L9MJ', '0CU6LW3NKB', '5D74J6FPFJ', 'XKI9UXSCZ1', 'NTCGYW8LVC', 'RVRFD92E48', 'LZGTB0T5Z7', 
-        'VSM4IZ4EL3']
-        self.users_rds_table = self.users_rds_table.loc[self.users_rds_table['country_code'].isin(corrupted_codes)==False]
-        self.users_rds_table['country_code'] = self.users_rds_table['country_code'].replace('GGB', 'GB')
- 
-        print(set(self.users_rds_table['country_code']))
+        replacements_dict = {'GGB': 'GB'}
+        for existing, replacement in replacements_dict.items():
+            dataframe[column_to_normalise] = dataframe[column_to_normalise].str.replace(existing, replacement, regex=False)
+            mask = dataframe[column_to_normalise].str.fullmatch(r'[A-Z]{2}')
+            dataframe = dataframe.loc[mask]
 
 
+    @staticmethod
+    def verify_credit_card_number(dataframe, columns_to_normalise):
+        print("Verifying card numbers...")
+        for col_name in columns_to_normalise:
+            dataframe[col_name] = dataframe[col_name].astype(str)
+            mask = dataframe[col_name].str.fullmatch(r'[0-9]+', na=False)
+            dataframe = dataframe.loc[mask]  
+
+
+    @staticmethod
+    def normalise_continent_data(dataframe, column_to_normalise):
+        print("Normalising continents...")
+        replacements_dict = {'eeEurope': 'Europe', 'eeAmerica': 'America'}
+        for existing, replacement in replacements_dict.items():
+            dataframe[column_to_normalise] = dataframe[column_to_normalise].str.replace(existing, replacement, regex=False)
     
+    @staticmethod
+    def convert_product_weights(dataframe, column_to_normalise):
+        """
+        replace ml with g
+        if cell ends in number then g,
+        strip g from those cells, turn string into number and then divide by 1000
+        
+        now everything should be in kg, except for bad columns
+        strip kg from cells
+
+        check each cell is numbers only, remove those that aren't
+        
+        
+        """
+        print("Converting product weights...")
+        dataframe[column_to_normalise] = dataframe[column_to_normalise].str.replace('ml', 'g', regex=False)
+        dataframe = dataframe[~dataframe[column_to_normalise].str.contains('x', regex=False)]
+        dataframe = dataframe[~dataframe[column_to_normalise].str.contains(r'[A-Z0-9]{8}', regex=True)]
+    
+        
+        
+        grams_mask = dataframe[column_to_normalise].str.contains(r'[0-9]+g$')
+        
+        dataframe[column_to_normalise].where(~grams_mask, other=dataframe[column_to_normalise].str.replace('g', '', regex=False), inplace=True)
+        
+        # for idx, row in dataframe.iterrows():
+        #     if re.match(r'[0-9]$', row[column_to_normalise]):
+ 
+        #         row[column_to_normalise] = float(row[column_to_normalise])
+        #         print(row[column_to_normalise])
+        # print(dataframe[column_to_normalise].head(100))
+
+        
+        # dataframe[column_to_normalise] = pd.to_numeric(dataframe[column_to_normalise], errors='ignore')
+        # dataframe[column_to_normalise] = dataframe[column_to_normalise].astype(float, errors='ignore')
+        
+        
+        
+        # num_mask = dataframe[column_to_normalise].str.match(r'^[0-9]+$')
+        # dataframe[column_to_normalise].where(~num_mask, other=dataframe[column_to_normalise].astype(str).str[0:] + '.' + dataframe[column_to_normalise].astype(str).str[:-3], inplace=True)
+        
+        # dataframe[column_to_normalise] = dataframe[column_to_normalise].str.replace('kg', '000', regex=False)
+        # dataframe[column_to_normalise] = dataframe[column_to_normalise].str.replace('.', '', regex=False)
+        # dataframe[column_to_normalise].where(~num_mask, other=pd.to_numeric(dataframe[column_to_normalise]), inplace=True)
+        # dataframe[column_to_normalise].where(~dataframe[column_to_normalise].str.contains(r'[0-9]$', regex=True), other=pd.to_numeric(dataframe[column_to_normalise], errors='raise')/1000 , inplace=True)
+
+        #dataframe[column_to_normalise] = dataframe[column_to_normalise].where(dataframe[column_to_normalise].str.contains(r'[0-9]g$', regex=True), dataframe[column_to_normalise].str.replace('g', '', regex=False), inplace=True)
+        # dataframe[column_to_normalise] = dataframe[column_to_normalise].where(dataframe[column_to_normalise].str.contains(r'[0-9]$', regex=True), dataframe.to_numeric(dataframe[column_to_normalise], errors='coerce') , inplace=True)
+        
+        # dataframe[column_to_normalise] = dataframe[column_to_normalise].str.replace('kg', '', regex=False)
+        
+
+        # dataframe[column_to_normalise] = pd.to_numeric(dataframe[column_to_normalise], errors='ignore')
+        print(set(dataframe[column_to_normalise]))
+        
+        return dataframe
+
+
     def clean_user_data(self):
         """
         which will perform the cleaning of the user data.
@@ -222,20 +183,13 @@ class DataCleaner:
         rows filled with the wrong information.
         """
         self.remove_null_values(self.users_rds_table)
-        self.get_normalised_phone_numbers()
-        self.normalise_country_code()
-        self.normalise_email_addresses()
+        self.normalise_phone_numbers(self.users_rds_table, ['phone_number'])
+        self.normalise_country_code(self.users_rds_table, 'country_code')
+        self.normalise_email_addresses(self.users_rds_table, ['email_address'])
         self.normalise_dates(self.users_rds_table, ['date_of_birth', 'join_date'])
 
         return self.users_rds_table
-        # users_rds_table_null_removed = users_rds_table.dropna(how="any")
-        # if users_rds_table.duplicated(subset=["user_uuid"], keep="first").sum() > 0:
-        #     # delete duplicates
-        #     print(users_rds_table.loc[users_rds_table.duplicated(subset=["user_uuid"], keep="first"), : ])
-        # else:
-        #     pass
-        # print(users_rds_table.duplicated(subset=["user_uuid"], keep="first").sum())
-        # print(users_rds_table.duplicated(subset=["first_name", "last_name", "date_of_birth"], keep="first").sum())
+  
 
     def clean_card_data(self):
         """
@@ -243,11 +197,50 @@ class DataCleaner:
         """
         self.remove_null_values(self.card_info_table)
         self.normalise_dates(self.card_info_table, ['date_payment_confirmed'])
-        self.normalise_month_day_dates(self.card_info_table, ['expiry_date'])
+        self.normalise_month_year_dates(self.card_info_table, ['expiry_date'])
+        self.verify_credit_card_number(self.card_info_table, ['card_number'])
+
         return self.card_info_table
         
 
+    def clean_store_data(self):
+        """
+        clean store data 
+        returns pandas dataframe
+
+        remove 'lat' column - set is {'2XE1OWOC23', 'NULL', 'LACCWDI0SB', None, 'UXMWDMX1LC', '13KJZ890JH', 'N/A', 'OXVE5QR07O', 'A3O5CBWAMD', 'VKA5I8H32X'}
+        clear to see that all are nonsense codes or 'N/A', 'NULL' string or None type
+        
+        remove null values
+
+        remove nonsense codes - do this via the country_code column because 
+        can then just remove any non-2-letter strings
+
+        opening_date: normalise dates to be in YYYY-MM-DD format
+
+        transform in 'continent':
+        'eeEurope' to 'Europe'
+        'eeAmerica' to 'America'
+        """
+        self.store_info_table.drop('lat', axis=1, inplace=True)
+        self.remove_null_values(self.store_info_table)
+        self.normalise_country_code(self.store_info_table, 'country_code')
+        self.normalise_dates(self.store_info_table, ['opening_date'])
+        self.normalise_continent_data(self.store_info_table, 'continent')
+
+        return self.store_info_table
+
+
+    def clean_products_data(self):
+        """
+        
+        """
+   
+        self.remove_null_values(self.products_info_table)
+    
+        self.convert_product_weights(self.products_info_table, 'weight')
+        
 
 if __name__ == "__main__":
     cleaner = DataCleaner()
-    cleaner.clean_user_data()
+    cleaner.clean_store_data()
