@@ -1,9 +1,11 @@
 # from database_utils import DatabaseConnector
 import boto3
 s3 = boto3.client('s3')
+import json
 import pandas as pd
 import requests
 import tabula
+import urllib.request
 from tqdm import tqdm
 pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
@@ -50,6 +52,17 @@ class DataExtractor:
         # print(card_df.head(10))
         # print(card_df)
         return card_df
+
+    @staticmethod
+    def retrieve_json_data(url):
+        """
+        
+        """
+        # with urllib.request.urlopen(url) as url:
+        #     data = json.load(url)
+        df = pd.read_json(url)
+        
+        return df
 
 
     def list_number_of_stores(self, number_of_stores_endpoint):

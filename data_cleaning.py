@@ -1,5 +1,6 @@
 from dateutil import parser
 import datetime
+import numpy as np
 import pandas as pd
 import sqlalchemy
 import re
@@ -9,11 +10,13 @@ class DataCleaner:
     """
     Includes methods to clean data from each of the data sources
     """
-    def __init__(self, user_table=None, card_table=None, store_table=None, products_table=None) -> None:
+    def __init__(self, user_table=None, card_table=None, store_table=None, products_table=None, orders_table=None, dates_table=None) -> None:
         self.users_rds_table = user_table
         self.card_info_table = card_table
         self.store_info_table = store_table
         self.products_info_table = products_table
+        self.orders_info_table = orders_table
+        self.dates_info_table = dates_table
 
 
     @staticmethod
@@ -21,8 +24,16 @@ class DataCleaner:
         print("Removing null values...")
 
         dataframe.replace('NULL', None, inplace=True)
+        dataframe.replace('', np.nan, inplace=True)
         dataframe.dropna(inplace=True)
 
+
+    @staticmethod
+    def remove_nonsense_codes(df):
+        print("Removing nonsense codes...")
+        # df = df[~df[column_to_normalise].str.contains(r'[A-Z0-9]{8,10}', regex=True)]
+        df.replace(r'^[A-Z0-9]{8,10}$', np.nan, regex=True, inplace=True)
+        df.dropna(inplace=True)
 
     @staticmethod
     def normalise_phone_numbers(dataframe, columns_to_normalise):
@@ -115,61 +126,40 @@ class DataCleaner:
             dataframe[column_to_normalise] = dataframe[column_to_normalise].str.replace(existing, replacement, regex=False)
     
     @staticmethod
-    def convert_product_weights(dataframe, column_to_normalise):
+    def convert_product_weights(df, column_to_normalise):
         """
-        replace ml with g
-        if cell ends in number then g,
-        strip g from those cells, turn string into number and then divide by 1000
-        
-        now everything should be in kg, except for bad columns
-        strip kg from cells
 
-        check each cell is numbers only, remove those that aren't
-        
-        
         """
         print("Converting product weights...")
-        dataframe[column_to_normalise] = dataframe[column_to_normalise].str.replace('ml', 'g', regex=False)
-        dataframe = dataframe[~dataframe[column_to_normalise].str.contains('x', regex=False)]
-        dataframe = dataframe[~dataframe[column_to_normalise].str.contains(r'[A-Z0-9]{8}', regex=True)]
-    
+        df[column_to_normalise] = df[column_to_normalise].str.strip("., ")
+        df[column_to_normalise] = df[column_to_normalise].str.replace(r'ml$|g$', '', regex=True)
+        df[column_to_normalise] = df[column_to_normalise].str.replace(r'^[0-9]+oz$', '', regex=True)
+        df[column_to_normalise] = df[column_to_normalise].str.replace(r'^[0-9]+\sx\s[0-9]+$', '', regex=True)
+        df.replace('', np.nan, inplace=True)
+        df.dropna(inplace=True)
+        df[column_to_normalise] = df[column_to_normalise].apply(lambda x: float(x)/1000 if 'k' not in x else x)
+        df[column_to_normalise] = df[column_to_normalise].astype(str)
+        df[column_to_normalise] = df[column_to_normalise].str.replace('k', '', regex=False)
         
+        # df[column_to_normalise] = df[column_to_normalise].astype(float)
+        # print(df[column_to_normalise].head(50))
         
-        grams_mask = dataframe[column_to_normalise].str.contains(r'[0-9]+g$')
-        
-        dataframe[column_to_normalise].where(~grams_mask, other=dataframe[column_to_normalise].str.replace('g', '', regex=False), inplace=True)
-        
-        # for idx, row in dataframe.iterrows():
-        #     if re.match(r'[0-9]$', row[column_to_normalise]):
- 
-        #         row[column_to_normalise] = float(row[column_to_normalise])
-        #         print(row[column_to_normalise])
-        # print(dataframe[column_to_normalise].head(100))
+        return df
 
-        
-        # dataframe[column_to_normalise] = pd.to_numeric(dataframe[column_to_normalise], errors='ignore')
-        # dataframe[column_to_normalise] = dataframe[column_to_normalise].astype(float, errors='ignore')
-        
-        
-        
-        # num_mask = dataframe[column_to_normalise].str.match(r'^[0-9]+$')
-        # dataframe[column_to_normalise].where(~num_mask, other=dataframe[column_to_normalise].astype(str).str[0:] + '.' + dataframe[column_to_normalise].astype(str).str[:-3], inplace=True)
-        
-        # dataframe[column_to_normalise] = dataframe[column_to_normalise].str.replace('kg', '000', regex=False)
-        # dataframe[column_to_normalise] = dataframe[column_to_normalise].str.replace('.', '', regex=False)
-        # dataframe[column_to_normalise].where(~num_mask, other=pd.to_numeric(dataframe[column_to_normalise]), inplace=True)
-        # dataframe[column_to_normalise].where(~dataframe[column_to_normalise].str.contains(r'[0-9]$', regex=True), other=pd.to_numeric(dataframe[column_to_normalise], errors='raise')/1000 , inplace=True)
 
-        #dataframe[column_to_normalise] = dataframe[column_to_normalise].where(dataframe[column_to_normalise].str.contains(r'[0-9]g$', regex=True), dataframe[column_to_normalise].str.replace('g', '', regex=False), inplace=True)
-        # dataframe[column_to_normalise] = dataframe[column_to_normalise].where(dataframe[column_to_normalise].str.contains(r'[0-9]$', regex=True), dataframe.to_numeric(dataframe[column_to_normalise], errors='coerce') , inplace=True)
-        
-        # dataframe[column_to_normalise] = dataframe[column_to_normalise].str.replace('kg', '', regex=False)
-        
+    @staticmethod
+    def join_columns(df, columns_to_join, new_column_name):
+        df[new_column_name] = df[columns_to_join].apply(lambda row: '-'.join(row.values.astype(str)), axis=1)
 
-        # dataframe[column_to_normalise] = pd.to_numeric(dataframe[column_to_normalise], errors='ignore')
-        print(set(dataframe[column_to_normalise]))
-        
-        return dataframe
+
+    @staticmethod
+    def verify_integers(df, column):
+        df[column] = pd.to_numeric(df[column], downcast='integer', errors="coerce")
+        df.dropna(inplace=True)
+        print(set(df[column]))
+
+        return df
+
 
 
     def clean_user_data(self):
@@ -227,6 +217,7 @@ class DataCleaner:
         self.normalise_country_code(self.store_info_table, 'country_code')
         self.normalise_dates(self.store_info_table, ['opening_date'])
         self.normalise_continent_data(self.store_info_table, 'continent')
+        self.verify_integers(self.store_info_table, 'staff_numbers')
 
         return self.store_info_table
 
@@ -235,11 +226,36 @@ class DataCleaner:
         """
         
         """
-   
         self.remove_null_values(self.products_info_table)
-    
+        self.remove_nonsense_codes(self.products_info_table)
         self.convert_product_weights(self.products_info_table, 'weight')
+        self.normalise_dates(self.products_info_table, ['date_added'])
+
+        return self.products_info_table
+
+
+    def clean_orders_table(self):
+        """
+        remove columns: first_name, last_name and 1 to have table in correct form before uploading to the database
+        orders data contains column headers which are the same in other tables
+        table will act as source of truth for sales data and will be at centre of start base database schema
+        """
+        self.orders_info_table.drop(['first_name', 'last_name', '1', 'level_0'], axis=1, inplace=True)
+        self.remove_null_values(self.orders_info_table) # good check to do, but no null data in this instance
+        self.verify_credit_card_number(self.orders_info_table, ['card_number']) # good check to do, but no null data in this instance
+
+        return self.orders_info_table
+
+
+    def clean_dates_table(self):
+        self.remove_null_values(self.dates_info_table)
+        self.remove_nonsense_codes(self.dates_info_table)
+        self.join_columns(self.dates_info_table, ['year', 'month', 'day'], 'date')
+        self.normalise_dates(self.dates_info_table, ['date'])
+        self.dates_info_table.drop(['year', 'month', 'day'], axis=1, inplace=True)
         
+        return self.dates_info_table
+
 
 if __name__ == "__main__":
     cleaner = DataCleaner()

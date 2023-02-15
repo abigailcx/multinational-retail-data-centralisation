@@ -60,7 +60,48 @@ def main_4():
 
     products_cleaner = DataCleaner(products_table=products_table)
     cleaned_products_df = products_cleaner.clean_products_data()
-    print(cleaned_products_df)
+    print(cleaned_products_df['weight'])
+
+    local_dbcon = DatabaseConnector('local_creds.yaml')
+    local_dbcon.connect_to_db()
+
+    local_dbcon.upload_to_db('dim_products', cleaned_products_df)
+
+
+def main_5():
+# steps to perform:
+    # read db creds
+    # connect to db (AWS)
+    dbcon = DatabaseConnector('db_creds.yaml')
+    dbcon.connect_to_db()
+
+    # extract db (SQL table into pandas df)
+    datex = DataExtractor()
+    orders_table = datex.read_rds_table(dbcon.init_db_engine(), dbcon.list_db_tables()[2]) # selects orders_table from AWS RDS
+
+    cleaner = DataCleaner(orders_table=orders_table)
+    cleaned_orders_df = cleaner.clean_orders_table()
+
+    local_dbcon = DatabaseConnector('local_creds.yaml')
+    local_dbcon.connect_to_db()
+
+    local_dbcon.upload_to_db('orders_table', cleaned_orders_df)
+
+
+def main_6():
+    """
+    https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json
+    """
+    dates_datex = DataExtractor()
+    dates_table = dates_datex.retrieve_json_data('https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json')
+
+    dates_cleaner = DataCleaner(dates_table=dates_table)
+    cleaned_dates_df = dates_cleaner.clean_dates_table()
+
+    local_dbcon = DatabaseConnector('local_creds.yaml')
+    local_dbcon.connect_to_db()
+
+    local_dbcon.upload_to_db('dim_date_times', cleaned_dates_df)
 
 
 if __name__ == "__main__":
@@ -68,3 +109,5 @@ if __name__ == "__main__":
     # main_2()
     # main_3()
     main_4()
+    # main_5()
+    # main_6()
