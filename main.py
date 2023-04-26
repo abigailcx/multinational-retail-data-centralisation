@@ -1,9 +1,12 @@
+import sys
 from database_utils import DatabaseConnector
 from data_extraction import DataExtractor
 from data_cleaning import DataCleaner
 
-def main():
-# steps to perform:
+# supply argument of which table to run ETL pipeline on. 
+# sys.argv[1] options are: user, card, store, products, orders, dates
+
+def run_user_data_pipeline():
     # read db creds
     # connect to db (AWS)
     dbcon = DatabaseConnector('db_creds.yaml')
@@ -17,16 +20,15 @@ def main():
     cleaner = DataCleaner(user_table=user_table)
     cleaned_df = cleaner.clean_user_data()
 
-    # # connect to local pgadmin db to upload cleaned pandas df to db as SQL table
-    # local_dbcon = DatabaseConnector('local_creds.yaml')
-    # local_dbcon.connect_to_db()
+    # connect to local pgadmin db to upload cleaned pandas df to db as SQL table
+    local_dbcon = DatabaseConnector('local_creds.yaml')
+    local_dbcon.connect_to_db()
 
-    # # upload cleaned df to local db (pgadmin)
-    # local_dbcon.upload_to_db('dim_users_2', cleaned_df)
+    # upload cleaned df to local db (pgadmin)
+    local_dbcon.upload_to_db('dim_users_2', cleaned_df)
 
-    print("END OF MAIN.")
 
-def main_2():
+def run_card_details_pipeline():
     card_datex = DataExtractor()
     card_table = card_datex.retrieve_pdf_data('https://data-handling-public.s3.eu-west-1.amazonaws.com/card_details.pdf')
 
@@ -40,27 +42,25 @@ def main_2():
     # upload cleaned df to local db (pgadmin)
     local_dbcon.upload_to_db('dim_card_details', cleaned_card_df)
 
-def main_3():
+def run_store_data_pipeline():
     store_datex = DataExtractor()
     store_table = store_datex.retrieve_stores_data('https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/store_details', 
                                                     'https://aqj7u5id95.execute-api.eu-west-1.amazonaws.com/prod/number_stores')
                                             
     store_cleaner = DataCleaner(store_table=store_table)
     cleaned_store_df = store_cleaner.clean_store_data()
-    # print(cleaned_store_df)
 
     local_dbcon = DatabaseConnector('local_creds.yaml')
     local_dbcon.connect_to_db()
 
     local_dbcon.upload_to_db('dim_store_details', cleaned_store_df)
 
-def main_4():
+def run_products_data_pipeline():
     products_datex = DataExtractor()
     products_table = products_datex.extract_from_s3('s3://data-handling-public/products.csv')
 
     products_cleaner = DataCleaner(products_table=products_table)
     cleaned_products_df = products_cleaner.clean_products_data()
-    print(cleaned_products_df['weight'])
 
     local_dbcon = DatabaseConnector('local_creds.yaml')
     local_dbcon.connect_to_db()
@@ -68,8 +68,7 @@ def main_4():
     local_dbcon.upload_to_db('dim_products', cleaned_products_df)
 
 
-def main_5():
-# steps to perform:
+def run_orders_data_pipeline():
     # read db creds
     # connect to db (AWS)
     dbcon = DatabaseConnector('db_creds.yaml')
@@ -88,7 +87,7 @@ def main_5():
     local_dbcon.upload_to_db('orders_table', cleaned_orders_df)
 
 
-def main_6():
+def run_dates_times_pipeline():
     """
     https://data-handling-public.s3.eu-west-1.amazonaws.com/date_details.json
     """
@@ -105,9 +104,20 @@ def main_6():
 
 
 if __name__ == "__main__":
-    # main()
-    # main_2()
-    # main_3()
-    main_4()
-    # main_5()
-    # main_6()
+    table_to_load = sys.argv[1]
+
+    if table_to_load == "user":
+        run_user_data_pipeline()
+    elif table_to_load == "card":
+        run_card_details_pipeline()
+    elif table_to_load == "store":
+        run_store_data_pipeline()
+    elif table_to_load == "products":
+        run_products_data_pipeline()
+    elif table_to_load == "orders":
+        run_orders_data_pipeline()
+    elif table_to_load == "dates":
+        run_dates_times_pipeline()
+    else:
+        print(f"ERROR: check that '{sys.argv[1]}' is a valid table to be uploaded. The choices are: user, card, store, products, orders, dates.")
+        

@@ -1,0 +1,5 @@
+RDS_HOST: yourownrdshost.eu-west-1.rds.amazonaws.com
+RDS_PASSWORD: password
+RDS_USER: username
+RDS_DATABASE: databasename
+RDS_PORT: 5432
