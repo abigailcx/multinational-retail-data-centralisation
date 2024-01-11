@@ -1,8 +1,13 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+.DS_Store
+
 # credentials
 api_key.py
 db_creds.yaml
 local_creds.yaml
 
-# Byte-compiled / optimized / DLL files
-__pycache__
-.DS_Store
+#db
+pagila_db/
+
+
