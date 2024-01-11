@@ -1,0 +1,7 @@
+# credentials
+api_key.py
+db_creds.yaml
+local_creds.yaml
+
+__pycache__
+.DS_Store
